@@ -38,16 +38,18 @@ namespace RoomTagPlugin
                 .ToList();
 
             int i = 0;
-            foreach (var item in rooms)
+            Transaction ts = new Transaction(doc, "Room Number Transaction");
+            ts.Start();
+            foreach (var room in rooms)
             {
                 i += 1;
                 //names += item.Name + Environment.NewLine;
-                names += item.Number + Environment.NewLine;
+                room.Number = i.ToString();
+                names += $"\"{room.Number}\" - \"{room.Name}\"{Environment.NewLine}";
             }
+            ts.Commit();
 
-            //TaskDialog.Show("Rooms:", rooms.Count.ToString());
-            //TaskDialog.Show("Names:", names);
-            TaskDialog.Show($"{rooms.Count} room names:", names);
+            TaskDialog.Show($"{rooms.Count} rooms:", names);
             return Result.Succeeded;
         }
     }
