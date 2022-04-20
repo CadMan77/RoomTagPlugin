@@ -20,17 +20,30 @@ namespace RoomTagPlugin
 
             string names = String.Empty;
 
-            //List<ViewPlan> projectFloorPlans = new FilteredElementCollector(doc)
-            //    .OfClass(typeof(ViewPlan))
-            //    .OfType<ViewPlan>()
-            //    .Where(x=>!x.IsTemplate)
-            //    .Where(x=>x.ViewType == ViewType.FloorPlan)
-            //    .ToList();
+            List<Level> levels = new FilteredElementCollector(doc)
+                .OfClass(typeof(Level))
+                .OfType<Level>()
+                .ToList();
 
-            //List<Level> levels = new FilteredElementCollector(doc)
-            //    .OfClass(typeof(Level))
-            //    .OfType<Level>()
-            //    .ToList();
+            using (Transaction tran = new Transaction(doc))
+            {
+                int x = 0;
+                tran.Start("tran1");
+                foreach (Level level in levels)
+                {
+                    PlanTopology topology = doc.get_PlanTopology(level);
+                    PlanCircuitSet circuitSet = topology.Circuits;
+                    foreach (PlanCircuit circuit in circuitSet)
+                    {
+                        if (!circuit.IsRoomLocated)
+                        {
+                            x += 1;
+                            Room room = doc.Create.NewRoom(null, circuit);
+                        }
+                    }
+                }
+                tran.Commit();
+            }
 
             List<Room> rooms = new FilteredElementCollector(doc)
                 .OfCategory(BuiltInCategory.OST_Rooms)
@@ -43,7 +56,6 @@ namespace RoomTagPlugin
             foreach (var room in rooms)
             {
                 i += 1;
-                //names += item.Name + Environment.NewLine;
                 room.Number = i.ToString();
                 names += $"\"{room.Number}\" - \"{room.Name}\"{Environment.NewLine}";
             }
