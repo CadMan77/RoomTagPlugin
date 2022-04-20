@@ -18,8 +18,6 @@ namespace RoomTagPlugin
         {
             Document doc = commandData.Application.ActiveUIDocument.Document;
 
-            string names = String.Empty;
-
             List<Level> levels = new FilteredElementCollector(doc)
                 .OfClass(typeof(Level))
                 .OfType<Level>()
@@ -27,20 +25,25 @@ namespace RoomTagPlugin
 
             using (Transaction tran = new Transaction(doc))
             {
-                int x = 0;
+                int ln = 0;
+                int rn = 0;
+
                 tran.Start("tran1");
                 foreach (Level level in levels)
                 {
+                    ln += 1;
                     PlanTopology topology = doc.get_PlanTopology(level);
                     PlanCircuitSet circuitSet = topology.Circuits;
                     foreach (PlanCircuit circuit in circuitSet)
                     {
                         if (!circuit.IsRoomLocated)
                         {
-                            x += 1;
+                            rn += 1;
                             Room room = doc.Create.NewRoom(null, circuit);
+                            room.Number = (ln*100 + rn).ToString();
                         }
                     }
+                    rn = 0;
                 }
                 tran.Commit();
             }
@@ -50,16 +53,17 @@ namespace RoomTagPlugin
                 .OfType<Room>()
                 .ToList();
 
-            int i = 0;
-            Transaction ts = new Transaction(doc, "Room Number Transaction");
-            ts.Start();
+            //int i = 0;
+            //Transaction ts = new Transaction(doc, "Room Number Transaction");
+            //ts.Start();
+            string names = String.Empty;
             foreach (var room in rooms)
             {
-                i += 1;
-                room.Number = i.ToString();
+                //i += 1;
+                //room.Number = i.ToString();
                 names += $"\"{room.Number}\" - \"{room.Name}\"{Environment.NewLine}";
             }
-            ts.Commit();
+            //ts.Commit();
 
             TaskDialog.Show($"{rooms.Count} rooms:", names);
             return Result.Succeeded;
